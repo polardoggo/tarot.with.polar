@@ -147,7 +147,7 @@
                         </div>
                         
                         <div class="text-center border-t border-dashed border-[#4c1d95] pt-3 sm:pt-5 mt-2 flex flex-wrap justify-center gap-2 sm:gap-3">
-                            <a href="#contact-us" class="bg-[#a78bfa] text-[#130f26] border border-[#a78bfa] px-8 sm:px-10 py-1.5 rounded-full text-[9px] sm:text-xs font-bold shadow-sm hover:bg-[#c4b5fd] hover:scale-105 transition uppercase w-[85%] sm:w-auto">Contact Us</a>
+                            <a href="#contact-us" onclick="smoothScrollToSection(event, 'contact-us')" class="bg-[#a78bfa] text-[#130f26] border border-[#a78bfa] px-8 sm:px-10 py-1.5 rounded-full text-[9px] sm:text-xs font-bold shadow-sm hover:bg-[#c4b5fd] hover:scale-105 active:scale-95 transition-all duration-300 uppercase w-[85%] sm:w-auto">Contact Us</a>
                             <a href="https://www.facebook.com/tarot.with.polar" target="_blank" class="hidden bg-[#4f46e5] text-white px-4 sm:px-6 py-1.5 rounded-full text-[8px] sm:text-xs font-bold shadow-sm hover:bg-[#6366f1] transition border border-[#4f46e5] uppercase">Facebook</a>
                             <a href="https://www.instagram.com/tarot.with.polar/" target="_blank" class="hidden bg-[#a78bfa] text-[#130f26] px-4 sm:px-6 py-1.5 rounded-full text-[8px] sm:text-xs font-bold shadow-sm hover:bg-[#c4b5fd] transition border border-[#a78bfa] uppercase">Instagram</a>
                         </div>
@@ -476,6 +476,46 @@
             }).catch(err => {
                 console.error('Failed to copy: ', err);
             });
+        }
+
+        // Script ควบคุมการเลื่อนหน้าจอที่นุ่มนวลขึ้น
+        function smoothScrollToSection(e, sectionId) {
+            e.preventDefault();
+            const target = document.getElementById(sectionId);
+            if (!target) return;
+
+            // หน่วงเวลา 150ms เพื่อให้เห็นแอนิเมชันปุ่มยุบตัว (active:scale-95) ก่อนหน้าจอจะเลื่อน
+            setTimeout(() => {
+                // คำนวณระยะโดยเว้นขอบบนเล็กน้อย (-40px)
+                const targetPosition = target.getBoundingClientRect().top + window.scrollY - 40;
+                const startPosition = window.scrollY;
+                const distance = targetPosition - startPosition;
+                const duration = 1200; // ตั้งเวลาความสมูทที่ 1.2 วินาที (เปลี่ยนได้ตามต้องการ)
+                let start = null;
+
+                // ปิดพฤติกรรม Scroll เดิมของเบราว์เซอร์ชั่วคราวไม่ให้ชนกับ Script
+                document.documentElement.style.scrollBehavior = 'auto';
+
+                function animation(currentTime) {
+                    if (start === null) start = currentTime;
+                    const timeElapsed = currentTime - start;
+                    const progress = Math.min(timeElapsed / duration, 1);
+                    
+                    // สูตรคำนวณความนุ่มนวล (easeInOutCubic) เริ่มช้า-เร็วกลาง-จบช้า
+                    const ease = progress < 0.5 ? 4 * progress * progress * progress : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+                    
+                    window.scrollTo(0, startPosition + distance * ease);
+                    
+                    if (timeElapsed < duration) {
+                        requestAnimationFrame(animation);
+                    } else {
+                        // เลื่อนเสร็จแล้วเปิดกลับ และตั้งค่า URL ให้ตรงกับเป้าหมาย
+                        document.documentElement.style.scrollBehavior = 'smooth';
+                        history.pushState(null, null, '#' + sectionId);
+                    }
+                }
+                requestAnimationFrame(animation);
+            }, 150);
         }
     </script>
 </body>
